@@ -1,3 +1,4 @@
+import { createAnimations } from "./animations.js";
 
 /* gloabl Phaser */ //Window.Phaser
 const config = {
@@ -40,6 +41,9 @@ function preload() {
         'assets/entities/mario.png',
         { frameWidth: 18, frameHeight: 16 }
     )
+
+    /* sounds */
+    this.load.audio('gameover', 'assets/sound/music/gameover.mp3')
 
 }
 
@@ -85,13 +89,20 @@ function create() {
         .setGravityY(600)
         .setCollideWorldBounds(true)
 
+    /* mundo */
+    this.physics.world.setBounds(0, 0, 2000, config.height) //le añadimos 2000px de mundo a la derecha
+
+    /* camara */
+    this.cameras.main.setBounds(0,0, 2000, config.height) //límites de la cámara los mismos que los del mundo
+    this.cameras.main.startFollow(this.mario) //la cámara sigue a Mario
+
     /* Collisions */
     this.physics.add.collider(this.mario, this.floor)
 
 
     /* animations */
 
-    this.anims.create({
+    /* this.anims.create({
         key: 'mario-walk',
         frames: this.anims.generateFrameNumbers(
             'mario',
@@ -109,7 +120,9 @@ function create() {
     this.anims.create({
         key: 'mario-jump',
         frames: [{ key: 'mario', frame: 5 }]
-    })
+    }) */ //Lo cambiamos a un archivo js ya que se va a meter más animaciones
+
+    createAnimations(this)
 
 
     /* Keys */
@@ -120,6 +133,7 @@ function create() {
 }
 
 function update() {
+    if(this.mario.isDead) return
 
     if (this.keys.left.isDown) {
         this.mario.anims.play('mario-walk', true)
@@ -139,5 +153,20 @@ function update() {
         this.mario.setVelocityY(-300) //with physics
         this.mario.anims.play('mario-jump', true);
         /* this.mario.y -= 3 */ //without physics
+    }
+
+    if(this.mario.y >= config.height){
+        this.mario.isDead = true
+        this.mario.anims.play('mario-dead')
+        this.mario.setCollideWorldBounds(false)
+        /* this.sound.play('gameover') */
+        this.sound.add('gameover', { volume: 0.1}).play()
+
+        setTimeout(()=>{
+            this.mario.setVelocityY(-350 )
+        },100)
+        setTimeout(()=>{
+            this.scene.restart()
+        },2000)
     }
 }
